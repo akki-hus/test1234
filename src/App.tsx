@@ -11,6 +11,7 @@ export default function App() {
   const [currentStage, setCurrentStage] = useState(0);
   const [topic, setTopic] = useState("");
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [parsedNotes, setParsedNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   // Student profile state persistence
@@ -88,6 +89,7 @@ export default function App() {
       // Generation successful! Update states
       setTopic(result.topic || data.topic || "Study Revision Review");
       setSlides(result.slides);
+      setParsedNotes(result.parsedNotes || data.textNotes || "");
       setActiveView("player");
       
     } catch (err: any) {
@@ -101,6 +103,7 @@ export default function App() {
     setActiveView("upload");
     setSlides([]);
     setTopic("");
+    setParsedNotes("");
     setError(null);
   };
 
@@ -245,7 +248,7 @@ export default function App() {
               )}
 
               {activeView === "player" && (
-                <ReelPlayer topic={topic} slides={slides} onReset={handleReset} />
+                <ReelPlayer topic={topic} slides={slides} parsedNotes={parsedNotes} onReset={handleReset} profile={profile || undefined} />
               )}
             </div>
           </>

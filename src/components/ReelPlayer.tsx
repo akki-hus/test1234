@@ -1,20 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles, Download, ArrowLeft, ArrowRight, Brain, AlertCircle, RefreshCw, GraduationCap } from "lucide-react";
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles, Download, ArrowLeft, ArrowRight, Brain, AlertCircle, RefreshCw, GraduationCap, Layers, MessageSquare, PlaySquare } from "lucide-react";
 import { Slide } from "../types";
 import { motion, AnimatePresence } from "motion/react";
+import StudentFlashcards from "./StudentFlashcards";
+import StudentQA from "./StudentQA";
 
 interface ReelPlayerProps {
   topic: string;
   slides: Slide[];
+  parsedNotes?: string;
   onReset: () => void;
+  profile?: any;
 }
 
-export default function ReelPlayer({ topic, slides, onReset }: ReelPlayerProps) {
+export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profile }: ReelPlayerProps) {
+  const [activeTab, setActiveTab] = useState<"reel" | "flashcards" | "qa">("reel");
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeWordIdx, setActiveWordIdx] = useState(0);
+
+  // Stop playback when switching away from the Reel Player tab
+  useEffect(() => {
+    if (activeTab !== "reel") {
+      setIsPlaying(false);
+      stopCurrentPlayback();
+    }
+  }, [activeTab]);
   
   // Tracking active audio node
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -565,7 +578,54 @@ export default function ReelPlayer({ topic, slides, onReset }: ReelPlayerProps) 
   const activeImgUrl = activeImages[activeImgIdx] || currentSlide?.imageUrl;
 
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start" id="reel-player-container">
+    <div className="space-y-8 w-full">
+      {/* Premium Suite Navigation Sub-Tabs */}
+      <div className="flex border-b border-white/5 pb-1 gap-2 md:gap-4 overflow-x-auto" id="suite-navigation-tabs">
+        <button
+          onClick={() => setActiveTab("reel")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-tight rounded-xl transition duration-150 ${
+            activeTab === "reel"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10"
+              : "text-slate-400 hover:text-slate-200 hover:bg-white/5 bg-slate-900/40 border border-white/5"
+          }`}
+        >
+          <PlaySquare className="w-4 h-4 shrink-0" /> 🎬 REVISION REEL
+        </button>
+
+        <button
+          onClick={() => setActiveTab("flashcards")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-tight rounded-xl transition duration-150 ${
+            activeTab === "flashcards"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10"
+              : "text-slate-400 hover:text-slate-200 hover:bg-white/5 bg-slate-900/40 border border-white/5"
+          }`}
+        >
+          <Layers className="w-4 h-4 shrink-0" /> 🎴 STUDY FLASHCARDS
+        </button>
+
+        <button
+          onClick={() => setActiveTab("qa")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-tight rounded-xl transition duration-150 ${
+            activeTab === "qa"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10"
+              : "text-slate-400 hover:text-slate-200 hover:bg-white/5 bg-slate-900/40 border border-white/5"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4 shrink-0" /> 💬 AI STUDY COMPANION
+        </button>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {activeTab === "reel" ? (
+          <motion.div
+            key="reel-player"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
+            className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+            id="reel-player-container"
+          >
       {/* LEFT COLUMN: Premium Widescreen Cinematic Presentation Viewport (16:9 Cinema Mode) */}
       <div className="lg:col-span-8 space-y-4">
         <div className="flex items-center justify-between">
@@ -852,9 +912,35 @@ export default function ReelPlayer({ topic, slides, onReset }: ReelPlayerProps) 
             })}
           </div>
         </div>
+      </div> {/* Closes right column lg:col-span-4 */}
+    </motion.div>
+    ) : activeTab === "flashcards" ? (
+      <motion.div
+        key="flashcards-suite"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -15 }}
+        transition={{ duration: 0.25 }}
+        className="w-full"
+      >
+        <StudentFlashcards parsedNotes={parsedNotes || ""} topic={topic} profile={profile} />
+      </motion.div>
+    ) : (
+      <motion.div
+        key="qa-suite"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -15 }}
+        transition={{ duration: 0.25 }}
+        className="w-full"
+      >
+        <StudentQA parsedNotes={parsedNotes || ""} topic={topic} profile={profile} />
+      </motion.div>
+    )}
+  </AnimatePresence>
 
-        {/* Dynamic Compilation rendering modal state overlay */}
-        {isCompiling && (
+  {/* Dynamic Compilation rendering modal state overlay */}
+  {isCompiling && (
           <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-slate-900 border border-slate-850 p-6 rounded-2xl space-y-6 text-center text-white border-blue-500/20">
               <div className="space-y-2">
@@ -889,7 +975,6 @@ export default function ReelPlayer({ topic, slides, onReset }: ReelPlayerProps) 
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

@@ -11,10 +11,25 @@ export interface Slide {
   duration: number; // estimated duration in seconds
 }
 
+export interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  category: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
 export interface GenerationResponse {
   success: boolean;
   topic: string;
   slides: Slide[];
+  parsedNotes?: string;
   error?: string;
 }
 
@@ -27,3 +42,4 @@ export interface UserProfile {
   isGuest: boolean;
   savedReelsCount: number;
 }
+

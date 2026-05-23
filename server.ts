@@ -59,14 +59,18 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// Helper: Try to extract structured JSON slides from text notes using Pollinations AI (same provider as images - keyless and fast)
+// Helper: Try to extract structured JSON slides from text notes using Google Gen AI SDK (Built-in Gemini AI)
 async function generateRevisionSlides(
   textNotes: string, 
   topicName: string = "", 
   standard: string = "", 
   board: string = ""
 ): Promise<{ topic: string; slides: any[] }> {
-  const systemPrompt = `You are an expert masterclass educator, textbook author, and visual director. Your goal is to transform complex textbook notes or study guides into extremely engaging, deep study revision reels.
+  try {
+    const ai = getAI();
+    console.log(`Using built-in Gemini 3.5 Flash for slide generation. Cohort: standard=${standard}, board=${board}`);
+    
+    const systemPrompt = `You are an expert masterclass educator, textbook author, and visual director. Your goal is to transform complex textbook notes or study guides into extremely engaging, deep study revision reels.
 You must plan an extensive, high-quality visual slideshow of between 10 and 15 slides to make the revision reel long, complete, comprehensive, and high-value. Keep the student's cohort standard "${standard}" and syllabus board "${board}" in mind to align the academic rigor perfectly.
 
 Every slide must contain top-tier synthesized revision content. You must return a valid JSON object matching the following structure:
@@ -95,60 +99,10 @@ CRITICAL REQUIREMENT FOR IMAGES: You MUST provide exactly 5 sequential, distinct
 
 Ensure the output is robust, compliant JSON only, and follows the specified format perfectly.`;
 
-  const inputPrompt = `Topic Hint: ${topicName}
+    const inputPrompt = `Topic Hint: ${topicName}
 Study Notes context:
 ${textNotes.slice(0, 18000)}`;
 
-  try {
-    console.log(`Using Pollinations AI keyless text model ('openai') for slide generation. Context: standard=${standard}, board=${board}`);
-    const response = await fetch("https://text.pollinations.ai/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: inputPrompt }
-        ],
-        model: "openai", // uses a premium model that responds beautifully in JSON mode
-        jsonMode: true
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Pollinations API status code is ${response.status}`);
-    }
-
-    const text = await response.text();
-    let cleanText = text.trim();
-    if (cleanText.startsWith("```json")) {
-      cleanText = cleanText.substring(7);
-    }
-    if (cleanText.endsWith("```")) {
-      cleanText = cleanText.substring(0, cleanText.length - 3);
-    }
-    
-    return JSON.parse(cleanText.trim());
-  } catch (err: any) {
-    console.warn("Pollinations Text API slide generation failed. Falling back to built-in Gemini...", err);
-    return generateRevisionSlidesWithGeminiFallback(textNotes, topicName, standard, board, systemPrompt, inputPrompt);
-  }
-}
-
-// Fallback logic using built-in Gemini 3.5 Flash in case Pollinations text API is slow or offline
-async function generateRevisionSlidesWithGeminiFallback(
-  textNotes: string, 
-  topicName: string, 
-  standard: string, 
-  board: string,
-  systemPrompt: string,
-  inputPrompt: string
-): Promise<{ topic: string; slides: any[] }> {
-  try {
-    const ai = getAI();
-    console.log("Engaging Gemini 3.5 Flash backup pipeline...");
-    
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: inputPrompt,
@@ -208,7 +162,7 @@ async function generateRevisionSlidesWithGeminiFallback(
     const rawText = response.text || "";
     return JSON.parse(rawText.trim());
   } catch (err: any) {
-    console.error("Both Pollinations text API and Gemini fallback failed:", err);
+    console.error("Gemini slides generation failed:", err);
     throw new Error(`Revision generation failed: ${err.message || err}`);
   }
 }
@@ -327,7 +281,8 @@ app.post("/api/generate", upload.single("pdfFile"), async (req, res) => {
     return res.json({
       success: true,
       topic: slidePlan.topic || topicHint || "Study Revision Review",
-      slides: refinedSlides
+      slides: refinedSlides,
+      parsedNotes: textContent
     });
 
   } catch (error: any) {
@@ -335,6 +290,139 @@ app.post("/api/generate", upload.single("pdfFile"), async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message || "An unexpected error occurred during the revision reel generation process."
+    });
+  }
+});
+
+// Flashcard Generation Endpoint
+app.post("/api/generate-flashcards", async (req, res) => {
+  try {
+    const { textNotes, topic, standard, board } = req.body;
+    if (!textNotes || textNotes.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: "Study material context is required to extract flashcards."
+      });
+    }
+
+    const ai = getAI();
+    console.log(`Generating interactive flashcards using Gemini 3.5 Flash. Cohort: standard=${standard}, board=${board}`);
+
+    const systemPrompt = `You are an elite academic coach and cognitive science researcher specializing in study retention.
+Your goal is to extract exactly 8 to 12 high-yielding review flashcards from the study notes textbook.
+Tailor the complexity to the student's Grade Cohort "${standard || "Advanced Studies"}" corresponding to the "${board || "Board"}" syllabus.
+
+Each card must contain:
+1. 'front': A concise question or definition prompt. Keep it highly centered and challenging.
+2. 'back': A clear, direct explanation highlighting vital facts. Wrap key terms in markdown **bold** flags.
+3. 'category': The question scope, for example "Concept", "Fact", "Formula", or "Key Term".
+
+Ensure the absolute return is a raw JSON array matching identical fields. No markdown wrappers around the JSON block.`;
+
+    const inputPrompt = `Topic Hints: ${topic || "Revision material"}
+Study Notes content:
+${textNotes.slice(0, 18000)}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: inputPrompt,
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          description: "List of exactly 8 to 12 interactive study flashcards.",
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING, description: "incremental number index" },
+              front: { type: Type.STRING, description: "Question on card front" },
+              back: { type: Type.STRING, description: "Answer on card back" },
+              category: { type: Type.STRING, description: "Sub-topic tag classification" }
+            },
+            required: ["id", "front", "back", "category"]
+          }
+        },
+        temperature: 0.7
+      }
+    });
+
+    const parsedCards = JSON.parse((response.text || "[]").trim());
+    return res.json({
+      success: true,
+      flashcards: parsedCards
+    });
+
+  } catch (error: any) {
+    console.error("Flashcards generation failed:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Could not generate flashcards from this study material."
+    });
+  }
+});
+
+// Study Q&A Conversation Chat Endpoint
+app.post("/api/chat-qa", async (req, res) => {
+  try {
+    const { textNotes, question, history, standard, board } = req.body;
+    if (!question || !question.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide a valid question for the study companion."
+      });
+    }
+
+    const ai = getAI();
+    console.log(`Answering student Q&A question using Gemini. Cohort: standard=${standard}, board=${board}`);
+
+    const systemPrompt = `You are a supportive, enthusiastic, and brilliant AI Study Companion and academic tutor.
+You have access to the student's uploaded notes/textbook text content.
+The student is in Grade Cohort "${standard || "Advanced Studies"}" following the "${board || "Standard"}" syllabus.
+
+Guidelines:
+1. Ground your response tightly within the uploaded study notes. Use the content to supply precise, direct explanations.
+2. Make your tone highly encouraging, clear, and structured. Use bullet points and paragraphs.
+3. Bold key terms using **markdown** tags.
+4. If the question goes slightly beyond the textbook, you may provide additional expert context, but explicitly clarify: "[Inside uploaded material: ...]" vs "[Additional context: ...]" so the student knows what is in their study syllabus.
+
+Study Notes textbook context:
+${(textNotes || "No textbook is currently uploaded. Provide a high-yield response using general subject matter understanding.").slice(0, 18000)}`;
+
+    const contents: any[] = [];
+    if (history && Array.isArray(history)) {
+      history.forEach((msg: any) => {
+        contents.push({
+          role: msg.role === "assistant" ? "model" : "user",
+          parts: [{ text: msg.content }]
+        });
+      });
+    }
+
+    contents.push({
+      role: "user",
+      parts: [{ text: question }]
+    });
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.7
+      }
+    });
+
+    return res.json({
+      success: true,
+      answer: response.text || "I apologize, but I could not formulate an educational answer. Please try rephrasing your question!"
+    });
+
+  } catch (error: any) {
+    console.error("AI Study Q&A failed:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "An unexpected error occurred during the Q&A session."
     });
   }
 });
