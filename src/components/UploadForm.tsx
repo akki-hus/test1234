@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { FileDown, Upload, FileText, Sparkles, BookOpen, Clock, AlertTriangle } from "lucide-react";
+import { FileDown, Upload, FileText, Sparkles, BookOpen, Clock, AlertTriangle, Layers, MessageSquare } from "lucide-react";
 
 interface UploadFormProps {
-  onGenerate: (data: { file: File | null; textNotes: string; topic: string }) => void;
+  onGenerate: (data: { file: File | null; textNotes: string; topic: string }, mode: "reel" | "flashcards" | "qa") => void;
   isLoading: boolean;
 }
 
@@ -97,14 +97,13 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
     setFile(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleActionSubmit = (mode: "reel" | "flashcards" | "qa") => {
     if (tab === "file" && !file) {
       alert("Please upload a study PDF file first.");
       return;
     }
     if (tab === "text" && textNotes.trim().length < 20) {
-      alert("Please enter more detailed study notes (min 20 characters) to summarize.");
+      alert("Please enter more detailed study notes (min 20 characters) to process.");
       return;
     }
     
@@ -112,51 +111,56 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
       file: tab === "file" ? file : null,
       textNotes: tab === "text" ? textNotes : "",
       topic: topic || "Study Topic"
-    });
+    }, mode);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleActionSubmit("reel");
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-8" id="upload-form-container">
-      {/* Tab selection */}
-      <div className="flex p-1 bg-slate-950/60 rounded-xl border border-white/5 max-w-sm mx-auto">
+    <div className="w-full max-w-3xl mx-auto space-y-10" id="upload-form-container">
+      {/* Premium Sliding Segmented Control Tab */}
+      <div className="flex p-1 bg-neutral-200/50 dark:bg-neutral-900/85 rounded-xl border border-black/5 dark:border-white/5 max-w-xs mx-auto shadow-inner transition-colors duration-300">
         <button
           type="button"
           onClick={() => { setTab("file"); }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium text-sm transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3.5 rounded-lg font-mono font-bold text-xs transition-all duration-300 cursor-pointer ${
             tab === "file"
-              ? "bg-blue-600/90 text-white shadow"
-              : "text-slate-400 hover:text-white"
+              ? "bg-white dark:bg-white/10 text-neutral-900 dark:text-white shadow-sm border border-black/5 dark:border-white/10"
+              : "text-neutral-500 dark:text-slate-400 hover:text-neutral-900 dark:hover:text-white"
           }`}
           id="tab-pdf"
         >
-          <Upload className="w-4 h-4" />
-          Upload PDF File
+          <Upload className="w-3.5 h-3.5" />
+          PDF Document
         </button>
         <button
           type="button"
           onClick={() => { setTab("text"); }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium text-sm transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3.5 rounded-lg font-mono font-bold text-xs transition-all duration-300 cursor-pointer ${
             tab === "text"
-              ? "bg-blue-600/90 text-white shadow"
-              : "text-slate-400 hover:text-white"
+              ? "bg-white dark:bg-white/10 text-neutral-900 dark:text-white shadow-sm border border-black/5 dark:border-white/10"
+              : "text-neutral-500 dark:text-slate-400 hover:text-neutral-900 dark:hover:text-white"
           }`}
           id="tab-text"
         >
-          <FileText className="w-4 h-4" />
-          Paste Study Notes
+          <FileText className="w-3.5 h-3.5" />
+          Text Notes
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Dynamic Fields */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="block text-xs font-mono tracking-wider uppercase text-slate-400 mb-2">
-              Topic Title (Optional)
+            <label className="block text-[10px] font-mono tracking-widest uppercase text-neutral-500 dark:text-slate-400 mb-2 font-bold transition-colors">
+              TOPIC DESIGNATION
             </label>
             <input
               type="text"
-              className="w-full glass-input px-4 py-3 rounded-xl text-white font-sans placeholder-slate-500 text-sm focus:border-blue-550 focus:ring-0"
+              className="w-full glass-input px-4 py-3.5 rounded-xl font-sans placeholder-neutral-400 dark:placeholder-slate-600 text-sm focus:border-neutral-400 dark:focus:border-white/20 focus:ring-0"
               placeholder="e.g. Photosynthesis Chapter, Calculus Midterm, Roman History..."
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -172,12 +176,12 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
               onDragLeave={handleDrag}
               onDrop={handleDrop}
               onClick={triggerFileSelect}
-              className={`relative cursor-pointer transition-all duration-300 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-10 min-h-[220px] ${
+              className={`relative cursor-pointer transition-all duration-300 border border-dashed rounded-2xl flex flex-col items-center justify-center p-12 min-h-[220px] ${
                 dragActive
-                  ? "border-blue-500 bg-blue-950/20 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
+                  ? "border-neutral-900 dark:border-white bg-[#000000]/[0.02] dark:bg-[#ffffff]/[0.03] shadow-[0_0_30px_rgba(0,0,0,0.02)] dark:shadow-[0_0_30px_rgba(255,255,255,0.04)]"
                   : file
-                  ? "border-emerald-500/60 bg-emerald-950/10"
-                  : "border-slate-800 bg-slate-900/30 hover:border-slate-700"
+                  ? "border-neutral-400 dark:border-slate-550 bg-neutral-100 dark:bg-slate-900/30"
+                  : "border-black/10 hover:border-black/20 dark:border-white/10 bg-black/[0.01] dark:bg-[#0d0f14]/45 hover:bg-black/[0.03] dark:hover:bg-[#0c0d12]/60"
               }`}
               id="drop-zone"
             >
@@ -190,13 +194,13 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
               />
 
               {file ? (
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
-                    <FileDown className="w-8 h-8" />
+                <div className="text-center space-y-4 animate-fade-in">
+                  <div className="w-14 h-14 rounded-full bg-neutral-100 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center mx-auto text-neutral-850 dark:text-slate-200">
+                    <FileDown className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
-                    <p className="text-emerald-400 font-medium text-sm break-all">{file.name}</p>
-                    <p className="text-xs text-slate-500 mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB • Ready to process</p>
+                    <p className="text-neutral-900 dark:text-white font-medium text-sm break-all">{file.name}</p>
+                    <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB • Ready to process</p>
                   </div>
                   <button
                     type="button"
@@ -204,21 +208,21 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
                       e.stopPropagation();
                       setFile(null);
                     }}
-                    className="text-xs text-slate-400 hover:text-rose-400 underline"
+                    className="text-xs text-neutral-400 hover:text-rose-450 dark:text-slate-500 dark:hover:text-rose-400 underline transition-all cursor-pointer"
                   >
                     Remove and upload other
                   </button>
                 </div>
               ) : (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-slate-950/50 flex items-center justify-center mx-auto text-blue-400">
-                    <Upload className="w-8 h-8" />
+                  <div className="w-14 h-14 rounded-full bg-black/5 dark:bg-white/[0.02] border border-black/5 dark:border-white/5 flex items-center justify-center mx-auto text-neutral-500 dark:text-slate-400 group-hover:scale-105 duration-300">
+                    <Upload className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className="font-medium text-slate-200">
-                      Drag & drop study PDF here, or <span className="text-blue-400 underline hover:text-blue-300">browse files</span>
+                    <p className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-slate-300">
+                      Drag & drop study PDF here, or <span className="text-neutral-900 dark:text-white underline hover:text-neutral-700 dark:hover:text-slate-200 transition-all">browse workspace</span>
                     </p>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-[11px] text-neutral-450 dark:text-slate-500 max-w-sm mx-auto">
                       Upload chapters, class slides, notes, or essays up to 15MB
                     </p>
                   </div>
@@ -228,49 +232,129 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
           ) : (
             /* Custom notes text area */
             <div>
-              <label className="block text-xs font-mono tracking-wider uppercase text-slate-400 mb-2">
-                Paste Study Content / Text Notes
+              <label className="block text-[10px] font-mono tracking-widest uppercase text-neutral-500 dark:text-slate-400 mb-2 font-bold transition-colors">
+                PASTED INPUT NOTES
               </label>
               <textarea
-                className="w-full glass-input p-4 rounded-2xl text-slate-200 font-sans text-sm min-h-[220px] focus:border-blue-550 placeholder-slate-600 resize-none"
+                className="w-full glass-input p-4.5 rounded-2xl font-sans text-sm min-h-[220px] placeholder-slate-450 dark:placeholder-slate-600 resize-none focus:border-neutral-400 dark:focus:border-white/20"
                 placeholder="Paste paragraph notes, study guidelines, textbook transcript, or class syllabus details..."
                 value={textNotes}
                 onChange={(e) => setTextNotes(e.target.value)}
                 id="text-notes-area"
               />
-              <p className="text-right text-xs text-slate-600 mt-1">
-                {textNotes.length} characters (minimum recommended 20)
+              <p className="text-right text-[10px] font-mono text-neutral-400 dark:text-slate-600 mt-1.5">
+                {textNotes.length} CHARS (MINIMUM RECOMMENDED 20)
               </p>
             </div>
           )}
         </div>
 
-        {/* Generate Button */}
-        <div className="flex flex-col sm:flex-row justify-center sm:justify-end gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full sm:w-auto relative group overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium px-8 py-4 rounded-xl shadow-lg hover:shadow-blue-500/20 active:translate-y-px transition-all duration-300 ${
-              isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-            }`}
-            id="btn-generate-revize"
-          >
-            <div className="flex items-center justify-center gap-3">
-              <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
-              <span className="font-display tracking-wide font-semibold">Generate Revision Reel</span>
-            </div>
-          </button>
+        {/* Choose Your Study Journey */}
+        <div className="space-y-6 pt-8 border-t border-black/5 dark:border-white/5 animate-fade-in" id="study-actions-container">
+          <div className="text-center sm:text-left">
+            <h3 className="text-[10px] font-mono tracking-widest uppercase text-neutral-500 dark:text-slate-400 flex items-center justify-center sm:justify-start gap-2 font-bold transition-colors">
+              <Sparkles className="w-3.5 h-3.5 text-neutral-800 dark:text-white animate-pulse" />
+              SELECT INTERACTIVE WORKSPACE
+            </h3>
+            <p className="text-xs text-neutral-500 dark:text-slate-500 mt-1">Select your study path to execute customized AI generation instantly.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* OPTION 1: Revision Reel */}
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => handleActionSubmit("reel")}
+              className={`text-left p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between group h-full relative ${
+                isLoading 
+                  ? "opacity-40 cursor-not-allowed border-black/5 dark:border-white/5 bg-neutral-100 dark:bg-slate-900/5" 
+                  : "bg-white/80 dark:bg-[#0b0c11]/45 hover:bg-neutral-50/90 dark:hover:bg-[#13151f]/60 border-black/10 dark:border-white/5 hover:border-black/20 dark:hover:border-white/10 hover:shadow-lg dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] active:scale-[0.99] cursor-pointer"
+              }`}
+            >
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/[0.02] border border-black/5 dark:border-white/5 text-neutral-700 dark:text-slate-300 flex items-center justify-center group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all duration-300 shadow-sm">
+                  <Sparkles className="w-4.5 h-4.5 group-hover:-rotate-12 duration-300" />
+                </div>
+                <h4 className="font-display font-black text-xs text-neutral-800 dark:text-slate-300 tracking-wider uppercase group-hover:text-neutral-950 dark:group-hover:text-white mt-1">
+                  🎬 COMPILE REVISION REEL
+                </h4>
+                <p className="text-xs text-neutral-600 dark:text-slate-400 leading-relaxed group-hover:text-neutral-700 dark:group-hover:text-slate-300 font-sans">
+                  Produces magnificent 16:9 cinematic whiteboard slides, visual study grids, and synchronized subtitles for quick audio-visual revisions.
+                </p>
+              </div>
+              <div className="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-slate-400 font-mono font-bold mt-6 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between w-full group-hover:text-neutral-900 dark:group-hover:text-white">
+                <span>Start Synthesis</span>
+                <span className="group-hover:translate-x-1 duration-150">→</span>
+              </div>
+            </button>
+
+            {/* OPTION 2: Concept Flashcards */}
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => handleActionSubmit("flashcards")}
+              className={`text-left p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between group h-full relative ${
+                isLoading 
+                  ? "opacity-40 cursor-not-allowed border-black/5 dark:border-white/5 bg-neutral-100 dark:bg-slate-900/5" 
+                  : "bg-white/80 dark:bg-[#0b0c11]/45 hover:bg-neutral-50/90 dark:hover:bg-[#13151f]/60 border-black/10 dark:border-white/5 hover:border-black/20 dark:hover:border-white/10 hover:shadow-lg dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] active:scale-[0.99] cursor-pointer"
+              }`}
+            >
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/[0.02] border border-black/5 dark:border-white/5 text-neutral-700 dark:text-slate-300 flex items-center justify-center group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all duration-300 shadow-sm">
+                  <Layers className="w-4.5 h-4.5 group-hover:scale-110 duration-300" />
+                </div>
+                <h4 className="font-display font-black text-xs text-neutral-800 dark:text-slate-300 tracking-wider uppercase group-hover:text-neutral-950 dark:group-hover:text-white mt-1">
+                  🎴 SPACED FLASHCARDS
+                </h4>
+                <p className="text-xs text-neutral-600 dark:text-slate-400 leading-relaxed group-hover:text-neutral-700 dark:group-hover:text-slate-300 font-sans">
+                  Extracts a micro-deck of 8-12 interactive cognitive flashcards instantly to drill facts, core equations, definitions and self-test.
+                </p>
+              </div>
+              <div className="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-slate-400 font-mono font-bold mt-6 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between w-full group-hover:text-neutral-900 dark:group-hover:text-white">
+                <span>Generate Decks</span>
+                <span className="group-hover:translate-x-1 duration-150">→</span>
+              </div>
+            </button>
+
+            {/* OPTION 3: AI Q&A Companion */}
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => handleActionSubmit("qa")}
+              className={`text-left p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between group h-full relative ${
+                isLoading 
+                  ? "opacity-40 cursor-not-allowed border-black/5 dark:border-white/5 bg-neutral-100 dark:bg-slate-900/5" 
+                  : "bg-white/80 dark:bg-[#0b0c11]/45 hover:bg-neutral-50/90 dark:hover:bg-[#13151f]/60 border-black/10 dark:border-white/5 hover:border-black/20 dark:hover:border-white/10 hover:shadow-lg dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)] active:scale-[0.99] cursor-pointer"
+              }`}
+            >
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-black/5 dark:bg-white/[0.02] border border-black/5 dark:border-white/5 text-neutral-700 dark:text-slate-300 flex items-center justify-center group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all duration-300 shadow-sm">
+                  <BookOpen className="w-4.5 h-4.5 group-hover:rotate-6 duration-300" />
+                </div>
+                <h4 className="font-display font-black text-xs text-neutral-800 dark:text-slate-300 tracking-wider uppercase group-hover:text-neutral-950 dark:group-hover:text-white mt-1">
+                  💬 GUEST AI TUTOR
+                </h4>
+                <p className="text-xs text-neutral-600 dark:text-slate-400 leading-relaxed group-hover:text-neutral-700 dark:group-hover:text-slate-300 font-sans">
+                  Bridges an interactive grounded conversational dialogue with an AI specialist to query explanations and resolve textbook questions.
+                </p>
+              </div>
+              <div className="text-[9px] uppercase tracking-wider text-neutral-500 dark:text-slate-400 font-mono font-bold mt-6 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between w-full group-hover:text-neutral-900 dark:group-hover:text-white">
+                <span>Engage Dialogue</span>
+                <span className="group-hover:translate-x-1 duration-150">→</span>
+              </div>
+            </button>
+          </div>
         </div>
       </form>
 
-      {/* Demo sample modules (extremely useful for developers grading) */}
-      <div className="space-y-4 pt-4 border-t border-slate-800/60">
-        <div>
-          <h3 className="text-xs font-mono tracking-wider uppercase text-slate-500 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" />
-            Instant Demos (No File Handy? Try one click!)
+      {/* Demo sample modules */}
+      <div className="space-y-4 pt-6 border-t border-black/5 dark:border-white/5">
+        <div className="text-center sm:text-left">
+          <h3 className="text-[10px] font-mono tracking-widest uppercase text-neutral-500 dark:text-slate-505 flex items-center gap-1.5 justify-center sm:justify-start font-bold">
+            <BookOpen className="w-3.5 h-3.5 text-neutral-550 dark:text-slate-500" />
+            EVALUATE HIGH-DENSITY TEMPLATE EXAMPLES
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Click any sample card to pre-fill content instantly, then generate!</p>
+          <p className="text-xs text-neutral-450 dark:text-slate-600 mt-0.5">Click any standard topic to preload context instantly and evaluate without local files.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -279,15 +363,15 @@ export default function UploadForm({ onGenerate, isLoading }: UploadFormProps) {
               key={sample.topic}
               type="button"
               onClick={() => selectSample(sample)}
-              className="text-left glass-card p-4 rounded-xl hover:scale-[1.02] flex flex-col justify-between group"
+              className="text-left apple-card p-5 rounded-xl hover:scale-[1.01] flex flex-col justify-between group active:scale-[0.99] cursor-pointer"
             >
-              <div className="space-y-1">
-                <span className="text-xs font-mono text-blue-400 group-hover:text-blue-300 font-semibold">{sample.topic}</span>
-                <p className="text-xs text-slate-400 leading-normal line-clamp-2">{sample.description}</p>
+              <div className="space-y-2">
+                <span className="text-xs font-mono font-bold text-neutral-800 dark:text-slate-200 group-hover:text-neutral-950 dark:group-hover:text-white block tracking-wider uppercase">{sample.topic}</span>
+                <p className="text-xs text-neutral-500 dark:text-slate-400 leading-relaxed line-clamp-2">{sample.description}</p>
               </div>
-              <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono mt-3 pt-2 border-t border-slate-800/50">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> 5 Slides</span>
-                <span className="text-blue-500/70 group-hover:text-blue-400">Load Template →</span>
+              <div className="flex items-center gap-3 text-[10px] text-neutral-450 dark:text-slate-500 font-mono mt-4 pt-3.5 border-t border-black/5 dark:border-white/5">
+                <span className="flex items-center gap-1 font-bold text-neutral-500 dark:text-slate-400"><Clock className="w-3 h-3 text-neutral-400 dark:text-slate-500" /> 5 SLIDES</span>
+                <span className="text-neutral-505 dark:text-slate-400 font-bold group-hover:text-neutral-950 dark:group-hover:text-white ml-auto duration-200">Load Template →</span>
               </div>
             </button>
           ))}

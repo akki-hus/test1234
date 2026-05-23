@@ -11,10 +11,12 @@ interface ReelPlayerProps {
   parsedNotes?: string;
   onReset: () => void;
   profile?: any;
+  initialTab?: "reel" | "flashcards" | "qa";
+  onCompileReel?: (topic: string, parsedNotes: string) => void;
 }
 
-export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profile }: ReelPlayerProps) {
-  const [activeTab, setActiveTab] = useState<"reel" | "flashcards" | "qa">("reel");
+export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profile, initialTab = "reel", onCompileReel }: ReelPlayerProps) {
+  const [activeTab, setActiveTab] = useState<"reel" | "flashcards" | "qa">(initialTab);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -580,13 +582,13 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
   return (
     <div className="space-y-8 w-full">
       {/* Premium Suite Navigation Sub-Tabs */}
-      <div className="flex border-b border-white/5 pb-1 gap-2 md:gap-4 overflow-x-auto" id="suite-navigation-tabs">
+      <div className="flex pb-2 gap-2 md:gap-3 overflow-x-auto border-b border-black/5 dark:border-white/5" id="suite-navigation-tabs">
         <button
           onClick={() => setActiveTab("reel")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-tight rounded-xl transition duration-150 ${
+          className={`flex items-center gap-2 px-4.5 py-2.5 text-xs font-mono font-bold tracking-wider rounded-xl transition-all duration-300 cursor-pointer ${
             activeTab === "reel"
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10"
-              : "text-slate-400 hover:text-slate-200 hover:bg-white/5 bg-slate-900/40 border border-white/5"
+              ? "bg-neutral-900 dark:bg-white/10 text-white shadow-sm border border-neutral-800 dark:border-white/15"
+              : "text-neutral-500 hover:text-neutral-900 hover:bg-black/5 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/5 bg-transparent"
           }`}
         >
           <PlaySquare className="w-4 h-4 shrink-0" /> 🎬 REVISION REEL
@@ -594,10 +596,10 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
 
         <button
           onClick={() => setActiveTab("flashcards")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-tight rounded-xl transition duration-150 ${
+          className={`flex items-center gap-2 px-4.5 py-2.5 text-xs font-mono font-bold tracking-wider rounded-xl transition-all duration-300 cursor-pointer ${
             activeTab === "flashcards"
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10"
-              : "text-slate-400 hover:text-slate-200 hover:bg-white/5 bg-slate-900/40 border border-white/5"
+              ? "bg-neutral-900 dark:bg-white/10 text-white shadow-sm border border-neutral-800 dark:border-white/15"
+              : "text-neutral-500 hover:text-neutral-900 hover:bg-black/5 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/5 bg-transparent"
           }`}
         >
           <Layers className="w-4 h-4 shrink-0" /> 🎴 STUDY FLASHCARDS
@@ -605,10 +607,10 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
 
         <button
           onClick={() => setActiveTab("qa")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-tight rounded-xl transition duration-150 ${
+          className={`flex items-center gap-2 px-4.5 py-2.5 text-xs font-mono font-bold tracking-wider rounded-xl transition-all duration-300 cursor-pointer ${
             activeTab === "qa"
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10"
-              : "text-slate-400 hover:text-slate-200 hover:bg-white/5 bg-slate-900/40 border border-white/5"
+              ? "bg-neutral-900 dark:bg-white/10 text-white shadow-sm border border-neutral-800 dark:border-white/15"
+              : "text-neutral-500 hover:text-neutral-900 hover:bg-black/5 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/5 bg-transparent"
           }`}
         >
           <MessageSquare className="w-4 h-4 shrink-0" /> 💬 AI STUDY COMPANION
@@ -617,29 +619,57 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
 
       <AnimatePresence mode="wait">
         {activeTab === "reel" ? (
-          <motion.div
-            key="reel-player"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25 }}
-            className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
-            id="reel-player-container"
-          >
+          slides.length === 0 ? (
+            <motion.div
+              key="empty-reel"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+              className="w-full text-center py-16 px-6 bg-neutral-50/50 dark:bg-slate-950/40 border border-black/15 dark:border-white/5 rounded-3xl space-y-6 flex flex-col items-center justify-center max-w-xl mx-auto"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center">
+                <PlaySquare className="w-8 h-8" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-display font-black text-xl text-neutral-900 dark:text-white">🎬 Compile Your Revision Reel</h3>
+                <p className="text-sm text-neutral-500 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+                  You requested to start studying directly! If you want to also generate dynamic visual whiteboard slides, immersive animations, and narration scripts for this topic, you can compile it now.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onCompileReel?.(topic, parsedNotes || "")}
+                className="px-6 py-3 rounded-xl bg-neutral-950 hover:bg-neutral-850 dark:bg-gradient-to-r dark:from-blue-600 dark:to-indigo-600 dark:hover:from-blue-500 dark:hover:to-indigo-500 text-white font-medium text-xs font-mono tracking-tight uppercase flex items-center gap-2 shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer duration-300"
+              >
+                <Sparkles className="w-4 h-4 text-yellow-550 dark:text-yellow-300 animate-pulse" />
+                <span>Synthesize Reel Slides</span>
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="reel-player"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+              className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+              id="reel-player-container"
+            >
       {/* LEFT COLUMN: Premium Widescreen Cinematic Presentation Viewport (16:9 Cinema Mode) */}
-      <div className="lg:col-span-8 space-y-4">
+      <div className="lg:col-span-8 space-y-4 text-left">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono font-semibold">
+            <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 dark:text-blue-400 text-xs font-mono font-semibold">
               DESKTOP CINEMA VIEW
             </span>
-            <h2 className="font-display font-black text-xl md:text-2xl text-white tracking-tight">
+            <h2 className="font-display font-black text-xl md:text-2xl text-neutral-950 dark:text-white tracking-tight">
               {topic}
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono bg-cyan-950/40 text-cyan-400 border border-cyan-800/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold">
-              <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" /> Kinetic Media ON
+            <span className="text-xs font-mono bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold">
+              <Sparkles className="w-3 h-3 text-cyan-500 dark:text-cyan-400 animate-pulse" /> Kinetic Media ON
             </span>
           </div>
         </div>
@@ -810,12 +840,12 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
         </div>
 
         {/* Action compiling download drawer blocks */}
-        <div className="bg-slate-900/40 border border-slate-800 p-5 rounded-2xl space-y-4">
+        <div className="bg-neutral-50/70 dark:bg-slate-900/40 border border-neutral-200 dark:border-slate-800 p-5 rounded-2xl space-y-4 text-left">
           <div className="space-y-1">
-            <h3 className="font-display font-bold text-sm text-slate-100 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-blue-400" /> Widescreen Video Exporter
+            <h3 className="font-display font-bold text-sm text-neutral-900 dark:text-slate-100 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" /> Widescreen Video Exporter
             </h3>
-            <p className="text-xs text-slate-400 leading-normal">
+            <p className="text-xs text-neutral-500 dark:text-slate-400 leading-normal">
               Download this study revision deck as a standalone high-definition MP4 video container. It records your active deck in 1280x720, kinetic outlines, custom zoom vectors, and embeds beautiful highlighted subtitle captions perfectly!
             </p>
           </div>
@@ -824,7 +854,7 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
             <button
               onClick={handleCompileVideo}
               disabled={isCompiling}
-              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:translate-y-px text-white font-semibold py-3.5 px-6 rounded-xl text-sm transition-all shadow-md shadow-blue-900/10"
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:translate-y-px text-white font-semibold py-3.5 px-6 rounded-xl text-sm transition-all shadow-md shadow-blue-900/10 cursor-pointer duration-200"
               id="btn-download-video"
             >
               <Download className="w-4 h-4" />
@@ -833,7 +863,7 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
             <button
               onClick={onReset}
               disabled={isCompiling}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 active:translate-y-px text-slate-300 font-semibold py-3.5 px-6 rounded-xl text-sm transition-all"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-neutral-50 hover:bg-neutral-100 dark:bg-slate-950 dark:hover:bg-slate-900 border border-black/10 dark:border-slate-800 hover:border-black/25 dark:hover:border-slate-700 active:translate-y-px text-neutral-600 dark:text-slate-300 font-semibold py-3.5 px-6 rounded-xl text-sm transition-all cursor-pointer"
               id="btn-recreate"
             >
               <RotateCcw className="w-4 h-4" />
@@ -844,19 +874,19 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
       </div>
 
       {/* RIGHT COLUMN: Interactive Webapp Dashboard Sidebar & Lesson Deck Selectors */}
-      <div className="lg:col-span-4 space-y-4">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-3">
-          <span className="text-[10px] font-mono tracking-wider uppercase text-slate-500">
+      <div className="lg:col-span-4 space-y-4 text-left">
+        <div className="bg-neutral-50/70 dark:bg-slate-900/60 border border-neutral-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+          <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400 dark:text-slate-500">
             CURRENT ADAPTIVE TARGET
           </span>
-          <div className="p-3 bg-slate-950/60 rounded-xl border border-white/5 space-y-1.5">
+          <div className="p-3 bg-white dark:bg-slate-950/60 rounded-xl border border-black/5 dark:border-white/5 space-y-1.5">
             <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-yellow-400 shrink-0" />
-              <span className="text-xs text-slate-300 font-bold uppercase">
+              <GraduationCap className="w-4 h-4 text-yellow-500 dark:text-yellow-400 shrink-0" />
+              <span className="text-xs text-neutral-700 dark:text-slate-300 font-bold uppercase">
                 Active revision Playlist
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed leading-normal">
+            <p className="text-[11px] text-neutral-500 dark:text-slate-400 leading-relaxed leading-normal">
               This revision program features {slides.length} distinct educational cards. Double-click or select any segment to instantly preview slides.
             </p>
           </div>
@@ -864,7 +894,7 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
 
         {/* Playlist tracker card overview */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold px-1">
+          <h3 className="text-[10px] font-mono uppercase tracking-wider text-neutral-500 dark:text-slate-400 font-bold px-1">
             Study Chapters List ({slides.length})
           </h3>
           <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
@@ -875,10 +905,10 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
                   key={slide.id}
                   type="button"
                   onClick={() => jumpToSlide(idx)}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between group ${
+                  className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${
                     isActive
-                      ? "bg-blue-600/15 border-blue-500/40 shadow-inner scale-[1.01]"
-                      : "bg-slate-900/30 border-slate-800 hover:border-slate-705 hover:bg-slate-900/50"
+                      ? "bg-blue-500/[0.04] dark:bg-blue-600/15 border-blue-500/30 dark:border-blue-500/40 shadow-inner scale-[1.01]"
+                      : "bg-neutral-50/50 dark:bg-slate-900/30 border-black/5 dark:border-slate-800 hover:border-black/15 hover:bg-neutral-100/50 dark:hover:border-slate-705 dark:hover:bg-slate-900/50"
                   }`}
                   id={`chapter-card-${idx}`}
                 >
@@ -886,24 +916,24 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
                     <div className={`mt-0.5 w-6 h-6 rounded-lg font-mono text-[10px] font-black flex items-center justify-center shrink-0 ${
                       isActive
                         ? "bg-blue-600 text-white"
-                        : "bg-slate-950 text-slate-500 group-hover:text-slate-300"
+                        : "bg-neutral-100 dark:bg-slate-950 text-neutral-500 dark:text-slate-505 group-hover:text-neutral-800 dark:group-hover:text-slate-300"
                     }`}>
                       {slide.id}
                     </div>
-                    <div className="min-w-0">
-                      <h4 className={`text-xs font-bold truncate ${isActive ? "text-white" : "text-slate-300 group-hover:text-white"}`}>
+                    <div className="min-w-0 bounds-lock leading-tight">
+                      <h4 className={`text-xs font-bold truncate ${isActive ? "text-neutral-905 dark:text-white" : "text-neutral-700 dark:text-slate-300 group-hover:text-neutral-950 dark:group-hover:text-white"}`}>
                         {slide.title}
                       </h4>
-                      <p className="text-[10px] text-slate-500 truncate pr-2 mt-0.5">
+                      <p className="text-[10px] text-neutral-450 dark:text-slate-505 truncate pr-2 mt-0.5 font-sans leading-none">
                         {slide.bullets[0] || "No bullets available"}
                       </p>
                     </div>
                   </div>
                   <div className="text-right shrink-0 ml-2">
-                    <span className="text-[9px] font-mono text-slate-500 block">
+                    <span className="text-[9px] font-mono text-neutral-400 dark:text-slate-505 block pr-1 leading-none pb-0.5">
                       {slide.duration}s
                     </span>
-                    <span className={`text-[8px] font-mono leading-none ${isActive ? "text-blue-400 font-bold" : "text-slate-600"}`}>
+                    <span className={`text-[8px] font-mono leading-none ${isActive ? "text-blue-550 dark:text-blue-400 font-bold" : "text-neutral-400 dark:text-slate-600"}`}>
                       {isActive ? "Playing" : "Queued"}
                     </span>
                   </div>
@@ -914,6 +944,7 @@ export default function ReelPlayer({ topic, slides, parsedNotes, onReset, profil
         </div>
       </div> {/* Closes right column lg:col-span-4 */}
     </motion.div>
+          )
     ) : activeTab === "flashcards" ? (
       <motion.div
         key="flashcards-suite"

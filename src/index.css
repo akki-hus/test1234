@@ -1,129 +1,202 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Space Grotesk", sans-serif;
 }
 
-/* Glassmorphism glass card styling */
-.glass-pane {
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* 
+ * Hybrid Theme Definitions: 
+ * Root defines Bright Mode (Light Theme default), 
+ * while the .dark class triggers the Premium Space Graphite theme.
+ */
+:root {
+  --bg-primary: #f4f5f8;
+  --text-primary: #12131a;
+  --text-secondary: #5a6475;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-hover-bg: rgba(255, 255, 255, 0.95);
+  --card-hover-border: rgba(0, 0, 0, 0.16);
+  --card-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.06);
+  --card-hover-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.95);
+  --input-border: rgba(0, 0, 0, 0.12);
+  --input-text: #12131a;
+  --input-focus-border: rgba(0, 0, 0, 0.4);
+  --input-shadow: rgba(0, 0, 0, 0.03);
+  --navbar-bg: rgba(245, 246, 248, 0.7);
+  --ambient-light-1: rgba(0, 0, 0, 0.015);
+  --ambient-light-2: rgba(0, 0, 0, 0.012);
 }
 
-.glass-card {
-  background: rgba(20, 30, 45, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+.dark {
+  --bg-primary: #07080b;
+  --text-primary: #f3f4f6;
+  --text-secondary: #94a3b8;
+  --card-bg: rgba(18, 20, 26, 0.65);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-hover-bg: rgba(22, 25, 33, 0.85);
+  --card-hover-border: rgba(255, 255, 255, 0.12);
+  --card-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.5);
+  --card-hover-shadow: 0 24px 64px -10px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(10, 11, 15, 0.8);
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-text: #ffffff;
+  --input-focus-border: rgba(255, 255, 255, 0.3);
+  --input-shadow: rgba(255, 255, 255, 0.06);
+  --navbar-bg: rgba(10, 11, 16, 0.6);
+  --ambient-light-1: rgba(255, 255, 255, 0.03);
+  --ambient-light-2: rgba(255, 255, 255, 0.02);
+}
+
+/* Base Body configuration on beautiful macOS Graphite Theme */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dynamic Glassmorphic Card Styling - premium macOS Cupertino frosted panels */
+.glass-pane {
+  background: var(--card-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-card:hover {
-  background: rgba(25, 40, 60, 0.75);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px 0 rgba(59, 130, 246, 0.15);
+.apple-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.apple-card:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--card-hover-border);
+  box-shadow: var(--card-hover-shadow);
+}
+
+/* Chrome metal effect - Sleek, high-reflective silver chrome textures */
+.chrome-metal {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chrome-metal:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0.08) 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Frosted glass elegant form input fields */
 .glass-input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: inherit;
-  transition: all 0.2s ease-in-out;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-input:focus {
-  background: rgba(15, 23, 42, 0.85);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+  background: var(--input-bg);
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--input-shadow);
   outline: none;
 }
 
-/* Custom Scrollbar */
+/* Custom macOS minimal thin scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(30, 41, 59, 0.3);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  border: 1px solid transparent;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.4);
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Gimmicks for animated neon glow */
-.pulse-glow-cyan {
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
-  animation: pulse-cyan 3s infinite alternate;
+/* Ambient metallic or glow transitions */
+.icon-active-bounce {
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.icon-active-bounce:hover {
+  transform: scale(1.18) translateY(-1px);
 }
 
-@keyframes pulse-cyan {
+/* Ken burns visual anim with premium micro-pan speed */
+@keyframes kenburns-slow {
   0% {
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
-  }
-  100% {
-    box-shadow: 0 0 25px rgba(6, 182, 212, 0.6);
-  }
-}
-
-.pulse-glow-blue {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-  animation: pulse-blue 3s infinite alternate;
-}
-
-@keyframes pulse-blue {
-  0% {
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
-  }
-  100% {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.65);
-  }
-}
-
-/* Ken Burns dynamic zoom-pan animation for slideshow images */
-@keyframes kenburns-pan {
-  0% {
-    transform: scale(1.05) translate(0px, 0px);
+    transform: scale(1.02) translate(0px, 0px);
   }
   50% {
-    transform: scale(1.18) translate(-10px, 5px);
+    transform: scale(1.1) translate(-4px, 2px);
   }
   100% {
-    transform: scale(1.05) translate(0px, 0px);
+    transform: scale(1.02) translate(0px, 0px);
+  }
+}
+.animate-ken-burns {
+  animation: kenburns-slow 16s ease-in-out infinite;
+}
+
+/* Active subtle pulse dot */
+.status-pulsar {
+  position: relative;
+}
+.status-pulsar::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: inherit;
+  border-radius: inherit;
+  animation: pulse-out 1.8s infinite ease-out;
+  opacity: 0.6;
+}
+@keyframes pulse-out {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
   }
 }
 
-.animate-ken-burns {
-  animation: kenburns-pan 12s ease-in-out infinite;
-}
-
-/* Custom glowing loading shimmer bar */
+/* Liquid fluid shimmer */
 .shimmer-bar {
   background: linear-gradient(
     90deg,
-    rgba(59, 130, 246, 0.1) 0%,
-    rgba(59, 130, 246, 0.6) 50%,
-    rgba(59, 130, 246, 0.1) 100%
+    rgba(255, 255, 255, 0.01) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.01) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer-anim 1.5s infinite linear;
+  animation: shimmer-swipe 2s infinite linear;
 }
-
-@keyframes shimmer-anim {
+@keyframes shimmer-swipe {
   0% {
-    background-position: -150% 0;
+    background-position: -200% 0;
   }
   100% {
-    background-position: 150% 0;
+    background-position: 200% 0;
   }
 }
-

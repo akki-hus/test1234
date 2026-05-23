@@ -34,17 +34,17 @@ export default function ProgressBar({ currentStage }: ProgressBarProps) {
   const progressPercentage = Math.round(((currentStage + 1) / STAGES.length) * 100);
 
   return (
-    <div className="w-full max-w-xl mx-auto glass-card p-6 md:p-8 rounded-2xl flex flex-col items-center justify-center space-y-6 md:space-y-8" id="progress-bar-container">
+    <div className="w-full max-w-xl mx-auto apple-card p-6 md:p-8 rounded-2xl flex flex-col items-center justify-center space-y-6 md:space-y-8" id="progress-bar-container">
       <div className="text-center space-y-2">
-        <div className="inline-block p-3 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 animate-spin mb-2">
+        <div className="inline-block p-3 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 dark:text-blue-400 animate-spin mb-2">
           <Loader2 className="w-8 h-8" />
         </div>
-        <h3 className="font-display font-bold text-lg text-white">Synthesizing Revision Reel...</h3>
-        <p className="text-xs text-slate-400 font-mono">EST: Under 45 seconds • Progress {progressPercentage}%</p>
+        <h3 className="font-display font-bold text-lg text-neutral-900 dark:text-white">Synthesizing Revision Reel...</h3>
+        <p className="text-xs text-neutral-400 dark:text-slate-400 font-mono">EST: Under 45 seconds • Progress {progressPercentage}%</p>
       </div>
 
       {/* Progress slider bar */}
-      <div className="w-full bg-slate-905 bg-slate-900/80 rounded-full h-2 overflow-hidden border border-slate-800">
+      <div className="w-full bg-neutral-100 dark:bg-slate-900/80 rounded-full h-2 overflow-hidden border border-neutral-200 dark:border-slate-800">
         <div 
           className="bg-gradient-to-r from-blue-600 to-cyan-400 h-full rounded-full transition-all duration-700 ease-out shimmer-bar"
           style={{ width: `${progressPercentage}%` }}
@@ -64,16 +64,16 @@ export default function ProgressBar({ currentStage }: ProgressBarProps) {
               key={stage.id} 
               className={`flex items-start gap-4 p-3 rounded-xl transition-all duration-300 ${
                 isActive 
-                  ? "bg-slate-800/40 border border-white/5 shadow-inner" 
+                  ? "bg-neutral-100/50 dark:bg-slate-800/40 border border-black/5 dark:border-white/5 shadow-inner" 
                   : "opacity-40"
               }`}
             >
               <div className={`mt-0.5 p-2 rounded-lg flex items-center justify-center ${
                 isDone 
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                  ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20" 
                   : isActive 
-                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" 
-                  : "bg-slate-950/40 text-slate-400 border border-transparent"
+                  ? "bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/20" 
+                  : "bg-neutral-150 dark:bg-slate-950/40 text-neutral-405 dark:text-slate-400 border border-transparent"
               }`}>
                 {isDone ? (
                   <svg className="w-4 h-4 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="3">
@@ -83,18 +83,18 @@ export default function ProgressBar({ currentStage }: ProgressBarProps) {
                   <Icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
                 )}
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 text-left">
                 <span className={`text-sm font-medium leading-relaxed ${
                   isDone 
-                    ? "text-emerald-400 font-semibold line-through" 
+                    ? "text-emerald-500 dark:text-emerald-400 font-semibold line-through" 
                     : isActive 
-                    ? "text-slate-100 font-semibold" 
-                    : "text-slate-300"
+                    ? "text-neutral-900 dark:text-slate-100 font-bold" 
+                    : "text-neutral-500 dark:text-slate-300"
                 }`}>
                   {stage.label}
                 </span>
                 {isActive && (
-                  <p className="text-xs text-slate-400 font-serif leading-normal animate-fade-in">
+                  <p className="text-xs text-neutral-400 dark:text-slate-400 font-serif leading-normal animate-fade-in">
                     {stage.detail}
                   </p>
                 )}
@@ -105,11 +105,11 @@ export default function ProgressBar({ currentStage }: ProgressBarProps) {
       </div>
 
       {/* Engaging slide prompt box */}
-      <div className="w-full bg-slate-950/40 p-4 border border-white/5 rounded-xl flex items-start gap-3">
-        <Sparkles className="w-5 h-5 text-yellow-300 shrink-0 mt-0.5" />
+      <div className="w-full bg-neutral-50/50 dark:bg-slate-950/40 p-4 border border-black/5 dark:border-white/5 rounded-xl flex items-start gap-3 text-left">
+        <Sparkles className="w-5 h-5 text-yellow-500 dark:text-yellow-300 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="text-[10px] font-mono tracking-widest uppercase text-yellow-400 block font-semibold">Active Revision Tip</span>
-          <p className="text-xs text-slate-300 leading-normal italic font-sans">
+          <span className="text-[10px] font-mono tracking-widest uppercase text-yellow-600 dark:text-yellow-400 block font-semibold">Active Revision Tip</span>
+          <p className="text-xs text-neutral-600 dark:text-slate-300 leading-normal italic font-sans">
             "{REASSURING_MESSAGES[tipsIndex]}"
           </p>
         </div>

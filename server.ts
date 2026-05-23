@@ -7,15 +7,26 @@ import dotenv from "dotenv";
 import { PDFParse } from "pdf-parse";
 
 async function parsePdfText(buffer: Buffer): Promise<string> {
+  let parser: PDFParse | null = null;
   try {
     console.log("Using PDFParse class from modern pdf-parse package");
     const uint8Array = new Uint8Array(buffer);
-    const parser = new PDFParse({ data: uint8Array });
-    const result = await parser.getText();
+    parser = new PDFParse({ data: uint8Array });
+    // Limit parsing to first 15 pages to keep memory footprint light and prevent timeouts (OOM-kills/Failed to fetch)
+    const result = await parser.getText({ first: 15 });
     return result.text || "";
   } catch (error: any) {
     console.error("PDF Parsing error inside helper:", error);
     throw error;
+  } finally {
+    if (parser) {
+      try {
+        await parser.destroy();
+        console.log("PDFParse instance destroyed successfully");
+      } catch (destroyErr) {
+        console.error("Error destroying PDFParse instance:", destroyErr);
+      }
+    }
   }
 }
 
@@ -194,6 +205,43 @@ async function generateTTS(narrationText: string, slideIndex: number): Promise<s
   // This stops unhandled WebSocket socket errors and Connect Errors in restrictive container networks.
   return "";
 }
+
+// Extract-only endpoint (Accepts uploaded PDF/text and returns parsed text cleanly)
+app.post("/api/parse-document", upload.single("pdfFile"), async (req, res) => {
+  try {
+    let textContent = req.body.textNotes || "";
+    const topicHint = req.body.topic || "";
+
+    if (req.file) {
+       console.log(`Extracting text from PDF: ${req.file.originalname}`);
+       const extractedText = await parsePdfText(req.file.buffer);
+       if (extractedText && extractedText.trim().length > 10) {
+         textContent = extractedText;
+       } else {
+         throw new Error("Uploaded PDF contains no extractable text or is formatted as images only.");
+       }
+    }
+
+    if (!textContent || textContent.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide either a PDF upload or valid study notes text."
+      });
+    }
+
+    return res.json({
+      success: true,
+      topic: topicHint || "Study Revision Review",
+      parsedNotes: textContent
+    });
+  } catch (error: any) {
+    console.error("Quick parse failure:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Could not parse study document content."
+    });
+  }
+});
 
 // End-to-end generator endpoint (Accepts uploaded PDF)
 app.post("/api/generate", upload.single("pdfFile"), async (req, res) => {
